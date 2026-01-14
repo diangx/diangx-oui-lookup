@@ -142,5 +142,78 @@ Expose to LAN:
 
 ---
 
-## How Lookup Works
-- TODO
+## How to Works
+
+### Input normalization
+Accepted MAC formats:
+```bash
+00:11:22:33:44:55
+00-11-22-33-44-55
+001122334455
+short prefix such as 00:11:22 or 001122
+```
+All inputs are normalized by extracting hex digits and left-aligning to 48 bits.
+
+### Parsing `manuf`
+Each non-comment line is treated as:
+```bash
+<prefix>[/mask] <vendor> [# comment]
+```
+
+If /mask is omitted, the mask is inferred from prefix length:
+```bash
+3 bytes → /24
+6 bytes → /48
+etc.
+```
+
+### Indexing strategy
+The DB is stored as:
+```bash
+map(maskBits -> map(prefix -> entry))
+masks_desc sorted in descending order
+```
+
+Lookup does:
+```bash
+1. normalize target to 48-bit value
+2. for each mask in masks_desc:
+    - key = mac & mask(maskBits)
+    - check map for match
+3. return first match (best match)
+```
+
+This is simple, fast, and deterministic.
+
+---
+
+## Portability Notes (Raspberry Pi / OpenWrt)
+
+### Default DB location
+For embedded deployments, a typical layout is:
+```bash
+binary: /usr/bin/oui
+DB: /usr/share/oui/manuf
+```
+
+You can build with a default DB path via CMake:
+```bash
+target_compile_definitions(oui PRIVATE OUI_DEFAULT_DB=\"/usr/share/oui/manuf\")
+```
+
+### Updating DB on embedded targets
+Current update uses an external downloader via system() (curl).
+On OpenWrt, you may prefer uclient-fetch or wget.
+
+Recommended approach:
+```bash
+try uclient-fetch → fallback to wget → fallback to curl
+or disable update in restricted environments and ship a fixed DB
+```
+
+### Security & Reliability Considerations
+```bash
+update downloads to a temporary file, validates non-zero size, then atomically replaces the DB.
+The web server is intentionally minimal (GET-only). Do not expose it to untrusted networks without hardening.
+Shell usage in update is kept minimal, and paths are shell-escaped.
+```
