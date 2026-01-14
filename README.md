@@ -60,6 +60,7 @@ diangx-oui-lookup/
 ├── fs.h / fs.cpp
 ├── str.h / str.cpp
 └── json.h / json.cpp
+```
 
 ---
 
@@ -68,6 +69,7 @@ diangx-oui-lookup/
 ```bash
 cmake -S . -B build
 cmake --build build -j
+```
 
 Binary output: 
 build/oui
@@ -79,14 +81,17 @@ build/oui
 ### 1) Update DB (download Wireshark manuf)
 ```bash
 ./build/oui update
+```
 
 Custom output path:
 ```bash
 ./build/oui update --db data/manuf
+```
 
 Custom URL:
 ```bash
 ./build/oui update --url https://www.wireshark.org/download/automated/data/manuf
+```
 
 ### 2) Lookup (text output)
 ```bash
@@ -94,16 +99,19 @@ Custom URL:
 ./build/oui lookup 001122334455
 ./build/oui lookup 00-11-22-33-44-55
 ./build/oui lookup 00:11:22
+```
 
 Example output:
 ```bash
 Vendor: Cisco Systems, Inc.
 Prefix: 00:11:22/24
 Comment: ...
+```
 
 ### 3) Lookup (JSON output)
 ```bash
 ./build/oui lookup --json 00:11:22:33:44:55
+```
 
 Example:
 ```bash
@@ -115,6 +123,7 @@ Example:
   "comment": "",
   "db": "data/manuf"
 }
+```
 
 ---
 
@@ -122,13 +131,14 @@ Example:
 Start server:
 ```bash
 ./build/oui serve --port 8080
-
+```
 * UI: http://127.0.0.1:8080/
 * API: http://127.0.0.1:8080/api/lookup?mac=00:11:22:33:44:55
 
 Expose to LAN:
 ```bash
 ./build/oui serve --host 0.0.0.0 --port 8080
+```
 
 ---
 
