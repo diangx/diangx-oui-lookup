@@ -86,7 +86,8 @@ Opts parse(int argc, char** argv) {
 
 int cmd_update(const Opts& o) {
   util::fs::ensure_parent_dir(o.db);
-  update::UpdateResult r = update::download_manuf(o.url, o.db);
+  update::DownloadOptions opt;
+  update::UpdateResult r = update::download_manuf(o.url, o.db, opt);
   if (!r.ok) {
     std::cerr << "Update failed: " << r.message << "\n";
     return 1;
