@@ -41,25 +41,25 @@ diangx-oui-lookup/
 ├── README.md
 ├── data/ # local DB (default output of update)
 └── src/
-├── main.cpp
-├── cli/ # command parsing + subcommands
-│ ├── cli.h
-│ └── cli.cpp
-├── oui/ # MAC parsing + manuf DB loader + lookup
-│ ├── mac.h
-│ ├── mac.cpp
-│ ├── manuf_db.h
-│ └── manuf_db.cpp
-├── update/ # DB downloader + atomic replace
-│ ├── updater.h
-│ └── updater.cpp
-├── web/ # minimal HTTP server + UI + API endpoint
-│ ├── http_server.h
-│ └── http_server.cpp
-├── util/ # small helpers
-│ ├── fs.h / fs.cpp
-│ ├── str.h / str.cpp
-│ └── json.h / json.cpp
+  ├── main.cpp
+  ├── cli/ # command parsing + subcommands
+  │ ├── cli.h
+  │ └── cli.cpp
+  ├── oui/ # MAC parsing + manuf DB loader + lookup
+  │ ├── mac.h
+  │ ├── mac.cpp
+  │ ├── manuf_db.h
+  │ └── manuf_db.cpp
+  ├── update/ # DB downloader + atomic replace
+  │ ├── updater.h
+  │ └── updater.cpp
+  ├── web/ # minimal HTTP server + UI + API endpoint
+  │ ├── http_server.h
+  │ └── http_server.cpp
+  ├── util/ # small helpers
+  │ ├── fs.h / fs.cpp
+  │ ├── str.h / str.cpp
+  │ └── json.h / json.cpp
 ```
 
 ---
