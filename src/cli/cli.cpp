@@ -7,6 +7,7 @@
 #include "util/str.h"
 #include "util/json.h"
 
+#include <cstdlib>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -46,9 +47,18 @@ bool take_arg(std::vector<std::string>& args, size_t& i, std::string& out) {
   return true;
 }
 
-bool take_int(std::vector<std::string>& args, size_t& i, int& out) {
+bool take_port(std::vector<std::string>& args, size_t& i, int& out) {
   if (i + 1 >= args.size()) return false;
-  out = std::stoi(args[++i]);
+  const std::string& value = args[++i];
+  char* end = nullptr;
+  long port = std::strtol(value.c_str(), &end, 10);
+  if (end == value.c_str() || *end != '\0') {
+    throw std::runtime_error("Invalid value for --port: " + value);
+  }
+  if (port < 1 || port > 65535) {
+    throw std::runtime_error("Port out of range (1-65535): " + value);
+  }
+  out = static_cast<int>(port);
   return true;
 }
 
@@ -73,7 +83,7 @@ Opts parse(int argc, char** argv) {
     } else if (a == "--host") {
       if (!take_arg(args, i, o.host)) throw std::runtime_error("Missing value for --host");
     } else if (a == "--port") {
-      if (!take_int(args, i, o.port)) throw std::runtime_error("Missing value for --port");
+      if (!take_port(args, i, o.port)) throw std::runtime_error("Missing value for --port");
     } else if (!a.empty() && a[0] == '-') {
       throw std::runtime_error("Unknown option: " + a);
     } else {
@@ -172,4 +182,3 @@ int run(int argc, char** argv) {
 }
 
 } // namespace cli
-

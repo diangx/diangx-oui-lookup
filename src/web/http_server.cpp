@@ -67,9 +67,19 @@ async function go() {
 </body>
 </html>)HTML";
 
+static const char* status_text(int status) {
+  switch (status) {
+    case 200: return "OK";
+    case 400: return "Bad Request";
+    case 404: return "Not Found";
+    case 405: return "Method Not Allowed";
+    default: return "Error";
+  }
+}
+
 static std::string http_response(int status, const std::string& contentType, const std::string& body) {
   std::ostringstream oss;
-  oss << "HTTP/1.1 " << status << (status==200 ? " OK" : status==404 ? " Not Found" : " Error") << "\r\n";
+  oss << "HTTP/1.1 " << status << " " << status_text(status) << "\r\n";
   oss << "Content-Type: " << contentType << "\r\n";
   oss << "Content-Length: " << body.size() << "\r\n";
   oss << "Connection: close\r\n";
@@ -104,6 +114,12 @@ std::string HttpServer::handle_request(const std::string& req, int& status, std:
   std::istringstream iss(req);
   std::string method, url, ver;
   iss >> method >> url >> ver;
+
+  if (method.empty() || url.empty()) {
+    status = 400;
+    contentType = "text/plain";
+    return "Bad Request";
+  }
 
   if (method != "GET") {
     status = 405;
@@ -158,7 +174,11 @@ int HttpServer::serve_forever() {
   sockaddr_in addr{};
   addr.sin_family = AF_INET;
   addr.sin_port = htons(static_cast<uint16_t>(port_));
-  addr.sin_addr.s_addr = inet_addr(host_.c_str());
+  if (inet_pton(AF_INET, host_.c_str(), &addr.sin_addr) != 1) {
+    std::cerr << "Invalid host IP: " << host_ << "\n";
+    ::close(fd);
+    return 1;
+  }
 
   if (bind(fd, (sockaddr*)&addr, sizeof(addr)) != 0) {
     std::cerr << "bind() failed (host/port available?)\n";
@@ -202,4 +222,3 @@ int HttpServer::serve_forever() {
 }
 
 } // namespace web
-
