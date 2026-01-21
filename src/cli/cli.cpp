@@ -34,7 +34,7 @@ Examples:
 struct Opts {
   std::string cmd;
   std::string db = "data/manuf";
-  std::string url = "https://www.wireshark.org/download/automated/data/manuf";
+  std::string url = "https://www.wireshark.org/download/automated/data/manuf.gz";
   bool json = false;
   std::string target;
   std::string host = "127.0.0.1";

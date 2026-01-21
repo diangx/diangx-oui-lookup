@@ -17,4 +17,5 @@ add_executable(oui
 )
 
 target_include_directories(oui PRIVATE src)
-
+find_package(ZLIB REQUIRED)
+target_link_libraries(oui PRIVATE ZLIB::ZLIB)

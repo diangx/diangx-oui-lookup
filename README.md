@@ -20,7 +20,7 @@ This tool:
 - returns the **first match** → the **most specific (best) match**
 
 ### 2) CLI + Web UI + JSON API
-- `oui update` downloads the latest `manuf` DB (atomic replace)
+- `oui update` downloads the latest `manuf` DB (atomic replace, gzip supported)
 - `oui lookup` returns vendor info (text or JSON)
 - `oui serve` provides:
   - browser UI at `/`
@@ -85,13 +85,15 @@ build/oui
 
 Custom output path:
 ```bash
-./build/oui update --db data/manuf
+./build/oui update --db data/manuf.gz
 ```
 
 Custom URL:
 ```bash
-./build/oui update --url https://www.wireshark.org/download/automated/data/manuf
+./build/oui update --url https://www.wireshark.org/download/automated/data/manuf.gz
 ```
+
+Tip: the loader auto-detects gzip files (magic header), so storing `manuf.gz` keeps disk usage smaller without extra steps.
 
 ### 2) Lookup (text output)
 ```bash

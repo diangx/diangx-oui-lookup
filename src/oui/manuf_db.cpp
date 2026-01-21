@@ -5,6 +5,10 @@
 #include <fstream>
 #include <sstream>
 #include <algorithm>
+#include <vector>
+#include <sys/stat.h>
+
+#include <zlib.h>
 
 namespace oui {
 
@@ -53,22 +57,125 @@ static bool parse_line(const std::string& raw, Entry& out) {
   return true;
 }
 
+static bool has_gzip_magic(const std::string& path) {
+  std::ifstream in(path, std::ios::binary);
+  if (!in) return false;
+  unsigned char magic[2] = {0, 0};
+  in.read(reinterpret_cast<char*>(magic), sizeof(magic));
+  return in.gcount() == 2 && magic[0] == 0x1f && magic[1] == 0x8b;
+}
+
+static bool file_exists(const std::string& path) {
+  struct stat st {};
+  return ::stat(path.c_str(), &st) == 0;
+}
+
+static bool ends_with(const std::string& value, const std::string& suffix) {
+  if (value.size() < suffix.size()) return false;
+  return value.compare(value.size() - suffix.size(), suffix.size(), suffix) == 0;
+}
+
+static bool is_relative_path(const std::string& path) {
+  return path.empty() || path[0] != '/';
+}
+
+static bool starts_with(const std::string& value, const std::string& prefix) {
+  return value.size() >= prefix.size() && value.compare(0, prefix.size(), prefix) == 0;
+}
+
+static LoadResult load_from_gzip(const std::string& path,
+                                 std::unordered_map<int, std::unordered_map<uint64_t, Entry>>& index,
+                                 size_t& outCount) {
+  gzFile gz = gzopen(path.c_str(), "rb");
+  if (!gz) {
+    return {false, "Cannot open gzip file: " + path, 0};
+  }
+
+  std::string line;
+  std::vector<char> buffer(4096);
+
+  while (true) {
+    char* res = gzgets(gz, buffer.data(), static_cast<int>(buffer.size()));
+    if (!res) break;
+
+    line.append(res);
+    if (!line.empty() && line.back() == '\n') {
+      Entry e;
+      if (parse_line(line, e)) {
+        index[e.maskBits][e.prefix] = e;
+        outCount++;
+      }
+      line.clear();
+    }
+  }
+
+  if (!line.empty()) {
+    Entry e;
+    if (parse_line(line, e)) {
+      index[e.maskBits][e.prefix] = e;
+      outCount++;
+    }
+  }
+
+  int errnum = Z_OK;
+  const char* err = gzerror(gz, &errnum);
+  gzclose(gz);
+  if (errnum != Z_OK && errnum != Z_STREAM_END) {
+    return {false, std::string("gzip read error: ") + (err ? err : "unknown"), 0};
+  }
+
+  return {true, "ok", outCount};
+}
+
 LoadResult ManufDB::load(const std::string& path) {
   index_.clear();
   masks_desc_.clear();
 
-  std::ifstream in(path);
-  if (!in) {
+  std::vector<std::string> candidates;
+  candidates.reserve(4);
+  auto add_candidates = [&](const std::string& base) {
+    if (base.empty()) return;
+    candidates.push_back(base);
+    if (ends_with(base, ".gz")) {
+      candidates.push_back(base.substr(0, base.size() - 3));
+    } else {
+      candidates.push_back(base + ".gz");
+    }
+  };
+
+  add_candidates(path);
+  if (is_relative_path(path) && starts_with(path, "data/")) {
+    add_candidates("../" + path);
+  }
+
+  std::string resolved;
+  for (const auto& candidate : candidates) {
+    if (file_exists(candidate)) {
+      resolved = candidate;
+      break;
+    }
+  }
+  if (resolved.empty()) {
     return {false, "Cannot open file: " + path, 0};
   }
 
   size_t count = 0;
-  std::string line;
-  while (std::getline(in, line)) {
-    Entry e;
-    if (!parse_line(line, e)) continue;
-    index_[e.maskBits][e.prefix] = e; // 마지막이 덮어쓰지만 보통 문제 없음
-    count++;
+  if (has_gzip_magic(resolved)) {
+    auto result = load_from_gzip(resolved, index_, count);
+    if (!result.ok) return result;
+  } else {
+    std::ifstream in(resolved);
+    if (!in) {
+      return {false, "Cannot open file: " + resolved, 0};
+    }
+
+    std::string line;
+    while (std::getline(in, line)) {
+      Entry e;
+      if (!parse_line(line, e)) continue;
+      index_[e.maskBits][e.prefix] = e; // 마지막이 덮어쓰지만 보통 문제 없음
+      count++;
+    }
   }
 
   masks_desc_.reserve(index_.size());
@@ -104,4 +211,3 @@ LookupResult ManufDB::lookup(const std::string& macOrPrefix) const {
 }
 
 } // namespace oui
-
