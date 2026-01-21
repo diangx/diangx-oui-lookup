@@ -85,11 +85,13 @@ build/oui
 
 Custom output path:
 ```bash
+./build/oui update --db data/manuf
 ./build/oui update --db data/manuf.gz
 ```
 
 Custom URL:
 ```bash
+./build/oui update --url https://www.wireshark.org/download/automated/data/manuf
 ./build/oui update --url https://www.wireshark.org/download/automated/data/manuf.gz
 ```
 
