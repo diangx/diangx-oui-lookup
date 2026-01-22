@@ -25,7 +25,7 @@ static void dump(std::ostringstream& oss, const Value& val);
 static void dump_obj(std::ostringstream& oss, const Object& obj) {
   oss << "{";
   bool first = true;
-  for (const auto& kv : obj) {
+  for (const auto& kv : obj.values) {
     if (!first) oss << ",";
     first = false;
     oss << "\"" << esc(kv.first) << "\":";
@@ -44,7 +44,12 @@ static void dump(std::ostringstream& oss, const Value& val) {
   } else if (std::holds_alternative<std::string>(val.v)) {
     oss << "\"" << esc(std::get<std::string>(val.v)) << "\"";
   } else {
-    dump_obj(oss, std::get<Object>(val.v));
+    const auto& ptr = std::get<Value::ObjectPtr>(val.v);
+    if (!ptr) {
+      oss << "{}";
+    } else {
+      dump_obj(oss, *ptr);
+    }
   }
 }
 
@@ -55,4 +60,3 @@ std::string stringify(const Object& obj) {
 }
 
 } // namespace util::json
-

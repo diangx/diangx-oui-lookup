@@ -14,6 +14,14 @@
 
 namespace {
 
+std::string default_db_path() {
+#ifdef OUI_DEFAULT_DB
+  return OUI_DEFAULT_DB;
+#else
+  return "data/manuf";
+#endif
+}
+
 void print_usage() {
   std::cout <<
 R"(OUI Lookup Tool (manuf based)
@@ -33,7 +41,7 @@ Examples:
 
 struct Opts {
   std::string cmd;
-  std::string db = "data/manuf";
+  std::string db = default_db_path();
   std::string url = "https://www.wireshark.org/download/automated/data/manuf.gz";
   bool json = false;
   std::string target;

@@ -1,8 +1,10 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.15)
 project(diangx_oui_lookup CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+set(OUI_DEFAULT_DB "data/manuf.gz" CACHE STRING "Default OUI database path")
 
 add_executable(oui
   src/main.cpp
@@ -19,3 +21,7 @@ add_executable(oui
 target_include_directories(oui PRIVATE src)
 find_package(ZLIB REQUIRED)
 target_link_libraries(oui PRIVATE ZLIB::ZLIB)
+target_compile_definitions(oui PRIVATE OUI_DEFAULT_DB="${OUI_DEFAULT_DB}")
+
+install(TARGETS oui RUNTIME DESTINATION bin)
+install(FILES data/manuf.gz DESTINATION share/oui)
