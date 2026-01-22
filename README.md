@@ -193,6 +193,11 @@ This is simple, fast, and deterministic.
 
 ## Portability Notes (Raspberry Pi / OpenWrt)
 
+For OpenWrt 
+```bash
+https://github.com/diangx/diangx-oui-lookup/tree/openwrt_19.07
+```
+
 ### Default DB location
 For embedded deployments, a typical layout is:
 ```bash
